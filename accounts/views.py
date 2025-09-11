@@ -158,6 +158,23 @@ def delete_expense(request, expense_id):
         return JsonResponse({"error": "Token expired"}, status=401)
     except jwt.InvalidTokenError:
         return JsonResponse({"error": "Invalid token"}, status=401)
-  
+@csrf_exempt
+def getuserdata(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("id")  # ✅ Extract user_id from token
+        if not user_id:
+            return JsonResponse({"error": "Invalid token payload"}, status=401)
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({"error": "Token expired"}, status=401)
+    except jwt.InvalidTokenError:
+        return JsonResponse({"error": "Invalid token"}, status=401)  
+    # ✅ Only fetch posts belonging to this user
+    user =User.objects.get(id=user_id)
+    return JsonResponse({"username": user.username})
 
         
