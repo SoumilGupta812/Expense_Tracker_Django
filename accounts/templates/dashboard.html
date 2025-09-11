@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -5,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Expense Tracker - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="icon"
+      type="image/png"
+      href="{% static 'images/favicon.png' %}"
+    />
   </head>
   <body
     class="min-h-screen bg-gradient-to-r from-green-200 via-green-100 to-green-300 flex flex-col"
@@ -70,7 +76,7 @@
           <!-- Avatar -->
 
           <img
-            src=""
+            src="{% static 'images/logo.png' %}"
             alt="User Avatar"
             class="w-20 h-20 rounded-full bg-gray-300 shadow-md mx-auto mb-2"
           />
