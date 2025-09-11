@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 350px;
+        text-align: center;
+      }
+      h2 {
+        margin-bottom: 20px;
+      }
+      input,
+      button {
+        padding: 10px;
+        margin: 5px 0;
+        width: 90%;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      button {
+        background: #4caf50;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 15px;
+        text-align: left;
+      }
+      li {
+        background: #f1f1f1;
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .delete-btn {
+        background: #e74c3c;
+        border: none;
+        color: #fff;
+        padding: 5px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .delete-btn:hover {
+        background: #c0392b;
+      }
+      .total,
+      .summary {
+        margin-top: 15px;
+        font-weight: bold;
+        font-size: 16px;
+        color: #333;
+      }
+      .summary-list {
+        margin-top: 10px;
+        background: #fafafa;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Expense Tracker</h2>
+      <input type="text" id="expenseName" placeholder="Enter expense name" />
+      <input type="number" id="expenseAmount" placeholder="Enter amount" />
+      <button onclick="addExpense()">Add Expense</button>
+      <ul id="expenseList"></ul>
+      <div class="total">Total: ₹<span id="totalAmount">0</span></div>
+
+      <div class="summary">
+        Monthly Summary
+        <div id="monthlySummary" class="summary-list"></div>
+      </div>
+    </div>
+    <script>
+      let total = 0;
+      let expenses = [];
+
+      // Load from local storage on page load
+      window.onload = function () {
+        const savedExpenses =
+          JSON.parse(localStorage.getItem("expenses")) || [];
+        expenses = savedExpenses;
+        total = 0;
+        document.getElementById("expenseList").innerHTML = "";
+        expenses.forEach((exp) => {
+          renderExpense(exp.name, exp.amount, exp.date);
+          total += exp.amount;
+        });
+        document.getElementById("totalAmount").textContent = total;
+        updateMonthlySummary();
+      };
+
+      function addExpense() {
+        const name = document.getElementById("expenseName").value;
+        const amount = parseFloat(
+          document.getElementById("expenseAmount").value
+        );
+        const date = new Date().toISOString();
+
+        if (name === "" || isNaN(amount) || amount <= 0) {
+          alert("Please enter valid expense details.");
+          return;
+        }
+
+        const expense = { name, amount, date };
+        expenses.push(expense);
+        localStorage.setItem("expenses", JSON.stringify(expenses));
+
+        renderExpense(name, amount, date);
+
+        total += amount;
+        document.getElementById("totalAmount").textContent = total;
+
+        updateMonthlySummary();
+
+        // clear inputs
+        document.getElementById("expenseName").value = "";
+        document.getElementById("expenseAmount").value = "";
+      }
+
+      function renderExpense(name, amount, date) {
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `${name} - ₹${amount} <button class="delete-btn" onclick="deleteExpense(this, '${name}', ${amount}, '${date}')">X</button>`;
+        document.getElementById("expenseList").appendChild(listItem);
+      }
+
+      function deleteExpense(button, name, amount, date) {
+        const li = button.parentElement;
+        li.remove();
+        total -= amount;
+        document.getElementById("totalAmount").textContent = total;
+
+        // Remove from array & localStorage
+        expenses = expenses.filter(
+          (exp) =>
+            !(exp.name === name && exp.amount === amount && exp.date === date)
+        );
+        localStorage.setItem("expenses", JSON.stringify(expenses));
+
+        updateMonthlySummary();
+      }
+
+      function updateMonthlySummary() {
+        const summaryDiv = document.getElementById("monthlySummary");
+        summaryDiv.innerHTML = "";
+
+        const monthlyTotals = {};
+
+        expenses.forEach((exp) => {
+          const d = new Date(exp.date);
+          const monthKey = d.getFullYear() + "-" + (d.getMonth() + 1);
+          if (!monthlyTotals[monthKey]) {
+            monthlyTotals[monthKey] = 0;
+          }
+          monthlyTotals[monthKey] += exp.amount;
+        });
+
+        for (const month in monthlyTotals) {
+          const div = document.createElement("div");
+          const [year, monthNum] = month.split("-");
+          const monthName = new Date(year, monthNum - 1).toLocaleString(
+            "default",
+            { month: "long" }
+          );
+          div.textContent = `${monthName} ${year}: ₹${monthlyTotals[month]}`;
+          summaryDiv.appendChild(div);
+        }
+      }
+    </script>
+  </body>
+</html>
