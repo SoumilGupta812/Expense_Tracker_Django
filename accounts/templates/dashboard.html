@@ -3,198 +3,175 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Expense Tracker</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f4f7fa;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
-      .container {
-        background: #fff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        width: 350px;
-        text-align: center;
-      }
-      h2 {
-        margin-bottom: 20px;
-      }
-      input,
-      button {
-        padding: 10px;
-        margin: 5px 0;
-        width: 90%;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-      }
-      button {
-        background: #4caf50;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #45a049;
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-        margin-top: 15px;
-        text-align: left;
-      }
-      li {
-        background: #f1f1f1;
-        margin: 5px 0;
-        padding: 8px;
-        border-radius: 6px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .delete-btn {
-        background: #e74c3c;
-        border: none;
-        color: #fff;
-        padding: 5px 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12px;
-      }
-      .delete-btn:hover {
-        background: #c0392b;
-      }
-      .total,
-      .summary {
-        margin-top: 15px;
-        font-weight: bold;
-        font-size: 16px;
-        color: #333;
-      }
-      .summary-list {
-        margin-top: 10px;
-        background: #fafafa;
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 14px;
-        text-align: left;
-      }
-    </style>
+    <title>Expense Tracker - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="container">
-      <h2>Expense Tracker</h2>
-      <input type="text" id="expenseName" placeholder="Enter expense name" />
-      <input type="number" id="expenseAmount" placeholder="Enter amount" />
-      <button onclick="addExpense()">Add Expense</button>
-      <ul id="expenseList"></ul>
-      <div class="total">Total: ₹<span id="totalAmount">0</span></div>
-
-      <div class="summary">
-        Monthly Summary
-        <div id="monthlySummary" class="summary-list"></div>
+  <body
+    class="min-h-screen bg-gradient-to-r from-green-200 via-green-100 to-green-300 flex flex-col"
+  >
+    <!-- Navbar -->
+    <nav
+      class="fixed top-0 left-0 w-full bg-green-600 text-white px-6 py-4 shadow-md z-10"
+    >
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <h1 class="text-xl font-bold tracking-wide">Expense Tracker 💰</h1>
+        <div class="flex items-center gap-4">
+          <a href=" " class="text-sm hover:underline cursor-pointer"
+            >Sign Out</a
+          >
+        </div>
       </div>
-    </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="flex-grow flex items-center justify-center pt-20 pb-12">
+      <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">
+          Dashboard
+        </h2>
+
+        <!-- Inputs -->
+        <div class="space-y-3 mb-4">
+          <input
+            id="expenseName"
+            type="text"
+            placeholder="Enter expense name"
+            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 hover:border-yellow-500 focus:border-yellow-500 transition"
+          />
+
+          <input
+            id="expenseAmount"
+            type="number"
+            placeholder="Enter amount"
+            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 hover:border-yellow-500 focus:border-yellow-500 transition"
+          />
+
+          <button
+            onclick="addExpense()"
+            class="w-full bg-green-500 text-white py-2 rounded-lg border-2 border-gray-700 hover:bg-green-700 hover:border-yellow-500 cursor-pointer focus:ring-2 focus:ring-green-400 transition"
+          >
+            ➕ Add Expense
+          </button>
+        </div>
+
+        <!-- Expense List -->
+        <ul id="expenseList" class="space-y-2 mb-4"></ul>
+
+        <!-- Total -->
+        <div class="total text-lg font-bold text-gray-700 mb-4">
+          Total: ₹<span id="totalAmount">0</span>
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="summary">
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">
+            📊 Monthly Summary
+          </h3>
+          <div
+            id="monthlySummary"
+            class="summary-list bg-gray-50 rounded-lg p-3 text-sm text-gray-700 space-y-1"
+          ></div>
+        </div>
+      </div>
+      <div id="postsContainer" class="space-y-4"></div>
+    </main>
+
     <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("jwt");
+
+        if (!token) {
+          alert("You must log in first!");
+          window.location.href = "http://127.0.0.1:8000/";
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            "http://localhost:8000/accounts/getexpense/",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (res.ok) {
+            const data = await res.json();
+            renderPosts(data);
+          } else {
+            alert("Failed to load data (maybe token expired)");
+            window.location.href = "login.html";
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error fetching data");
+        }
+      });
       let total = 0;
       let expenses = [];
-
-      // Load from local storage on page load
-      window.onload = function () {
-        const savedExpenses =
-          JSON.parse(localStorage.getItem("expenses")) || [];
-        expenses = savedExpenses;
-        total = 0;
-        document.getElementById("expenseList").innerHTML = "";
-        expenses.forEach((exp) => {
-          renderExpense(exp.name, exp.amount, exp.date);
-          total += exp.amount;
-        });
-        document.getElementById("totalAmount").textContent = total;
-        updateMonthlySummary();
-      };
 
       function addExpense() {
         const name = document.getElementById("expenseName").value;
         const amount = parseFloat(
           document.getElementById("expenseAmount").value
         );
-        const date = new Date().toISOString();
 
         if (name === "" || isNaN(amount) || amount <= 0) {
           alert("Please enter valid expense details.");
           return;
         }
 
-        const expense = { name, amount, date };
+        const expense = { name, amount };
         expenses.push(expense);
-        localStorage.setItem("expenses", JSON.stringify(expenses));
 
-        renderExpense(name, amount, date);
+        renderExpense(name, amount);
 
         total += amount;
         document.getElementById("totalAmount").textContent = total;
 
-        updateMonthlySummary();
-
-        // clear inputs
         document.getElementById("expenseName").value = "";
         document.getElementById("expenseAmount").value = "";
       }
+      function renderPosts(posts) {
+        const container = document.getElementById("postsContainer");
+        container.innerHTML = "";
 
-      function renderExpense(name, amount, date) {
+        posts.forEach((post) => {
+          const div = document.createElement("div");
+          div.className = "bg-white p-4 rounded-lg shadow";
+          div.innerHTML = `
+      <h2 class="text-xl font-semibold">${post.title}</h2>
+      <p class="text-gray-700">${post.content}</p>
+    `;
+          container.appendChild(div);
+        });
+      }
+      function renderExpense(name, amount) {
         const listItem = document.createElement("li");
-        listItem.innerHTML = `${name} - ₹${amount} <button class="delete-btn" onclick="deleteExpense(this, '${name}', ${amount}, '${date}')">X</button>`;
+        listItem.className =
+          "flex justify-between items-center bg-gray-100 px-3 py-2 rounded-lg shadow-sm";
+        listItem.innerHTML = `
+        <span>${name} - ₹${amount}</span>
+        <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 cursor-pointer"
+                onclick="deleteExpense(this, '${name}', ${amount})">
+          ✖
+        </button>
+      `;
         document.getElementById("expenseList").appendChild(listItem);
       }
 
-      function deleteExpense(button, name, amount, date) {
+      function deleteExpense(button, name, amount) {
         const li = button.parentElement;
         li.remove();
         total -= amount;
         document.getElementById("totalAmount").textContent = total;
 
-        // Remove from array & localStorage
         expenses = expenses.filter(
-          (exp) =>
-            !(exp.name === name && exp.amount === amount && exp.date === date)
+          (exp) => !(exp.name === name && exp.amount === amount)
         );
-        localStorage.setItem("expenses", JSON.stringify(expenses));
-
-        updateMonthlySummary();
-      }
-
-      function updateMonthlySummary() {
-        const summaryDiv = document.getElementById("monthlySummary");
-        summaryDiv.innerHTML = "";
-
-        const monthlyTotals = {};
-
-        expenses.forEach((exp) => {
-          const d = new Date(exp.date);
-          const monthKey = d.getFullYear() + "-" + (d.getMonth() + 1);
-          if (!monthlyTotals[monthKey]) {
-            monthlyTotals[monthKey] = 0;
-          }
-          monthlyTotals[monthKey] += exp.amount;
-        });
-
-        for (const month in monthlyTotals) {
-          const div = document.createElement("div");
-          const [year, monthNum] = month.split("-");
-          const monthName = new Date(year, monthNum - 1).toLocaleString(
-            "default",
-            { month: "long" }
-          );
-          div.textContent = `${monthName} ${year}: ₹${monthlyTotals[month]}`;
-          summaryDiv.appendChild(div);
-        }
       }
     </script>
   </body>

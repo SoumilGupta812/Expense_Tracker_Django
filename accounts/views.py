@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import User
+from django.conf import settings
+from .models import User ,Expense
 from django.contrib.auth.hashers import make_password, check_password
 import jwt
 import datetime
@@ -80,3 +81,26 @@ def login(request):
     return render(request,'login.html')
 def signup(request):
     return render(request,'signup.html')
+def getExpense(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("id")  # ✅ Extract user_id from token
+        if not user_id:
+            return JsonResponse({"error": "Invalid token payload"}, status=401)
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({"error": "Token expired"}, status=401)
+    except jwt.InvalidTokenError:
+        return JsonResponse({"error": "Invalid token"}, status=401)
+
+    # ✅ Only fetch posts belonging to this user
+    expenses = list(
+        Expense.objects.filter(user_id=user_id).values(
+            "id", "expense_name", "amount"
+        )
+    )
+
+    return JsonResponse(expenses, safe=False)
