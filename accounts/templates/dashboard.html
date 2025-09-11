@@ -110,7 +110,7 @@
       let total = 0;
       let expenses = [];
 
-      function addExpense() {
+      async function addExpense() {
         const name = document.getElementById("expenseName").value;
         const amount = parseFloat(
           document.getElementById("expenseAmount").value
@@ -121,6 +121,31 @@
           return;
         }
 
+        const token = localStorage.getItem("jwt");
+        let data = {
+          expense: name,
+          amount: amount,
+        };
+        try {
+          let response = await fetch("/accounts/addexpense/", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          let result = await response.json();
+          if (result.status) {
+            alert("✅ " + result.message);
+          } else {
+            alert("❌ " + result.error);
+            return;
+          }
+        } catch (err) {
+          alert("⚠️ Something went wrong: " + err);
+        }
         const expense = { name, amount };
         expenses.push(expense);
 
@@ -131,58 +156,46 @@
 
         document.getElementById("expenseName").value = "";
         document.getElementById("expenseAmount").value = "";
-
-        const storingData = async () => {
-          const token = localStorage.getItem("jwt");
-          let data = {
-            expense: name,
-            amount: amount,
-          };
-          try {
-            let response = await fetch("/accounts/addexpense/", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(data),
-            });
-
-            let result = await response.json();
-            if (result.status) {
-              alert("✅ " + result.message);
-            } else {
-              alert("❌ " + result.error);
-            }
-          } catch (err) {
-            alert("⚠️ Something went wrong: " + err);
-          }
-        };
-        storingData();
       }
       function renderPosts(posts) {
         posts.forEach((post) => {
-          renderExpense(post.expense_name, post.amount);
+          renderExpense(post.expense_name, post.amount, post.id);
           total += +post.amount;
         });
         document.getElementById("totalAmount").textContent = total;
       }
-      function renderExpense(name, amount) {
+      function renderExpense(name, amount, ...id) {
         const listItem = document.createElement("li");
         listItem.className =
           "flex justify-between items-center bg-gray-100 px-3 py-2 rounded-lg shadow-sm";
         listItem.innerHTML = `
         <span>${name} - ₹${amount}</span>
         <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 cursor-pointer"
-                onclick="deleteExpense(this, '${name}', ${amount})">
+                onclick="deleteExpense(this, '${name}', ${amount},${id[0]})">
           ✖
         </button>
       `;
         document.getElementById("expenseList").appendChild(listItem);
       }
 
-      function deleteExpense(button, name, amount) {
+      async function deleteExpense(button, name, amount, id) {
         const li = button.parentElement;
+        //
+        const token = localStorage.getItem("jwt");
+        const res = await fetch(`/accounts/deleteexpense/${id}/`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        let result = await res.json();
+        if (result.status) {
+          alert("✅ " + result.message);
+        } else {
+          alert("❌ " + result.error);
+          return;
+        }
+        //
         li.remove();
         total -= amount;
         document.getElementById("totalAmount").textContent = total;
