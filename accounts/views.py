@@ -15,7 +15,7 @@ def register(request):
         return JsonResponse({
             "error":"Wrong method"
         })
-    print("hello")
+
     
     data = json.loads(request.body)
     username = data.get('username')
@@ -104,7 +104,7 @@ def getExpense(request):
     )
 
     return JsonResponse(expenses, safe=False)
-
+@csrf_exempt
 def addExpense(request):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
@@ -119,3 +119,20 @@ def addExpense(request):
         return JsonResponse({"error": "Token expired"}, status=401)
     except jwt.InvalidTokenError:
         return JsonResponse({"error": "Invalid token"}, status=401)
+    if request.method != 'POST':
+        return JsonResponse({
+            "error":"Wrong method"
+        })
+
+    
+    data = json.loads(request.body)
+    expense = data.get('expense')
+    amount = data.get('amount')
+
+    exp=Expense(user_id=user_id,expense_name=expense,amount=amount)
+    exp.save()
+    return JsonResponse({
+            "message":"Expense has been added successfully",
+            "status":True
+            })
+        
