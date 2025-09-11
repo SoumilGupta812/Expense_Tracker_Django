@@ -87,23 +87,20 @@
         }
 
         try {
-          const res = await fetch(
-            "http://localhost:8000/accounts/getexpense/",
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const res = await fetch("/accounts/getexpense/", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
 
           if (res.ok) {
             const data = await res.json();
             renderPosts(data);
           } else {
             alert("Failed to load data (maybe token expired)");
-            window.location.href = "login.html";
+            window.location.href = "http://127.0.0.1:8000/";
           }
         } catch (err) {
           console.error(err);
@@ -143,8 +140,8 @@
           const div = document.createElement("div");
           div.className = "bg-white p-4 rounded-lg shadow";
           div.innerHTML = `
-      <h2 class="text-xl font-semibold">${post.title}</h2>
-      <p class="text-gray-700">${post.content}</p>
+      <h2 class="text-xl font-semibold">${post.expense_name}</h2>
+      <p class="text-gray-700">${post.amount}</p>
     `;
           container.appendChild(div);
         });

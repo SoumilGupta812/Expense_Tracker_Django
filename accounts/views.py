@@ -67,7 +67,7 @@ def login_user(request):
                 "username": user.username,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1) # token expiry
             }
-            token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+            token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
             return JsonResponse({"token": token, "status": True})
         else:
