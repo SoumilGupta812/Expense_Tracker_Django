@@ -7,6 +7,7 @@ from .models import User ,Expense
 from django.contrib.auth.hashers import make_password, check_password
 import jwt
 import datetime
+from django.core.mail import send_mail
 SECRET_KEY = "iamsecretkey" 
 # Create your views here.
 @csrf_exempt
@@ -38,6 +39,17 @@ def register(request):
             }) 
         user  = User(username=username,email=email,password=make_password(password))
         user.save()
+        try:
+            send_mail(
+                        subject="Welcome to ExpenseTracker!",
+                        message=f"Hi {username},\n\nThank you for registering at ExpenseTracker. Start tracking your expenses now!",
+                        from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                        recipient_list=[email],
+                        fail_silently=False,
+                    )
+        except Exception as e:
+                print("Email sending failed:", e)
+                # return redirect("userauths:home")
         return JsonResponse({
             "message":"User has been created successfully",
             "status":True
