@@ -3,10 +3,11 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.conf import settings
-from .models import User ,Expense
+from .models import User ,Expense ,OTP
 from django.contrib.auth.hashers import make_password, check_password
 import jwt
-import datetime
+import datetime ,random
+from django.utils import timezone
 from django.core.mail import send_mail
 SECRET_KEY = "iamsecretkey" 
 # Create your views here.
@@ -80,6 +81,17 @@ def login_user(request):
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1) # token expiry
             }
             token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+            otp = str(random.randint(100000, 999999))
+            expiry = timezone.now() + datetime.timedelta(minutes=5)
+
+            OTP.objects.create(user=user, code=otp, expiry=expiry)
+            send_mail(
+                        subject='Your OTP Code for Expense Tracker Verification',
+                        message=f"Hi {username},\n\nfYour OTP is {otp}. It expires in 5 minutes.",
+                        from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )            
 
             return JsonResponse({"token": token, "status": True})
         else:
@@ -188,5 +200,49 @@ def getuserdata(request):
     # ✅ Only fetch posts belonging to this user
     user =User.objects.get(id=user_id)
     return JsonResponse({"username": user.username})
+
+        
+@csrf_exempt
+def otpverify(request):
+    return render(request,'otp.html')
+
+@csrf_exempt
+def otp(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("id")  # ✅ Extract user_id from token
+        if not user_id:
+            return JsonResponse({"error": "Invalid token payload"}, status=401)
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({"error": "Token expired"}, status=401)
+    except jwt.InvalidTokenError:
+        return JsonResponse({"error": "Invalid token"}, status=401)
+    if request.method != 'POST':
+        return JsonResponse({
+            "error":"Wrong method"
+        })
+    data = json.loads(request.body)
+    oneTimePass=data.get('otp')
+    otpDB = OTP.objects.filter(user_id=user_id).last()
+    if otpDB.expiry < timezone.now():
+        otpDB.delete()
+        return JsonResponse({"status": False, "message": "OTP expired"})
+    if otpDB.expiry >timezone.now():
+        if oneTimePass==otpDB.code :
+            otpDB.delete()
+            return JsonResponse({
+            "message":"OTP Verified",
+            "status":True
+            })
+    else:
+        return JsonResponse({
+            "message":"OTP Error",
+            "status":False
+            })     
+
 
         

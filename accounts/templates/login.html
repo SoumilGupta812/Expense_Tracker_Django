@@ -110,8 +110,10 @@
 
             if (result.token) {
               localStorage.setItem("jwt", result.token); // save token
-              alert("✅ Login successful!");
-              window.location.href = "/accounts/dashboard/"; // redirect after login
+              alert(
+                "✅ Correct Credentials .\n Enter OTP to login successfully"
+              );
+              window.location.href = "/accounts/otpverification/"; // redirect after login
             } else {
               alert("❌ " + (result.error || "Login failed"));
             }

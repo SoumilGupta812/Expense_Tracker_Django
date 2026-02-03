@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --color-clifford: #da373d;
+      }
+    </style>
+    <title>OTP Verification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f3f4f6;
+      }
+
+      .otp-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 320px;
+      }
+
+      .otp-container h2 {
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .otp-inputs {
+        display: flex;
+        justify-content: space-between;
+        margin: 1rem 0;
+      }
+
+      .otp-inputs input {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.5rem;
+        text-align: center;
+        border: 2px solid #ddd;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .otp-inputs input:focus {
+        border-color: #6366f1;
+      }
+
+      button {
+        margin-top: 1rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+    </style>
+  </head>
+  <body
+    class="flex items-center justify-center min-h-screen bg-gradient-to-r from-green-200 via-green-100 to-green-300"
+  >
+    <nav
+      class="fixed top-0 left-0 w-full bg-green-600 text-white px-6 py-4 shadow-md z-10"
+    >
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <h1 class="text-xl font-bold tracking-wide hover:cursor-pointer">
+          Expense Tracker 💰
+        </h1>
+      </div>
+    </nav>
+    <div class="otp-container">
+      <h2>Enter OTP</h2>
+      <p>We sent a code to your email</p>
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" />
+        <input type="text" maxlength="1" />
+        <input type="text" maxlength="1" />
+        <input type="text" maxlength="1" />
+        <input type="text" maxlength="1" />
+        <input type="text" maxlength="1" />
+      </div>
+      <button
+        class="bg-green-500 text-white hover:bg-green-700 hover:border-yellow-500 cursor-pointer focus:ring-2 focus:ring-green-400 transition"
+        onclick="verifyOTP()"
+      >
+        Verify
+      </button>
+    </div>
+
+    <script>
+      const inputs = document.querySelectorAll(".otp-inputs input");
+
+      inputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+          if (input.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Backspace" && input.value === "" && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+      });
+
+      async function verifyOTP() {
+        let otp = "";
+        inputs.forEach((input) => (otp += input.value));
+        const data = {
+          otp: otp,
+        };
+        const token = localStorage.getItem("jwt");
+        if (!token) {
+          alert("Token Expired !");
+          window.location.href = "http://127.0.0.1:8000/";
+          return;
+        }
+        if (otp.length === inputs.length) {
+          try {
+            let response = await fetch("/accounts/otp/", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            let result = await response.json();
+
+            if (result.status) {
+              alert("✅ Correct OTP Entered. \nLogin successfully");
+              window.location.href = "/accounts/dashboard/"; // redirect after login
+            } else {
+              alert("❌ " + (result.error || "Login failed"));
+            }
+          } catch (err) {
+            alert("⚠️ Something went wrong: " + err);
+          }
+        } else {
+          alert("Please enter full OTP!");
+        }
+      }
+    </script>
+  </body>
+</html>
