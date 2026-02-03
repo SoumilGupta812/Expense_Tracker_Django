@@ -22,39 +22,35 @@ A simple **Expense Tracker web application** built using **Django** that helps u
 
 ## ⚙️ Installation & Setup
 
-### 1️⃣ Clone the repository
+### 1️⃣ Clone the repository:
 git clone https://github.com/SoumilGupta812/Expense_Tracker.git
 cd Expense_Tracker
 
-2️⃣ Create & activate environment (Anaconda)
+2️⃣ Create & activate environment (Anaconda):
 conda create -n expense_tracker python=3.11
 conda activate expense_tracker
 
-3️⃣ Install dependencies
+3️⃣ Install dependencies:
 pip install -r requirements.txt
 
-4️⃣ Run migrations
+4️⃣ Run migrations:
 python manage.py migrate
 
-5️⃣ Start the development server
+5️⃣ Start the development server:
 python manage.py runserver
 Open in browser:
-
 http://127.0.0.1:8000/
+
+
 🧠 What I Learned
 Implemented CRUD operations using Django models and views
-
 Worked with Django authentication system
-
 Used Django templates for dynamic content rendering
-
 Gained hands-on experience with URL routing and project structure
 
 🔮 Future Improvements
 Expense analytics and charts
-
 Monthly budget limits
-
 Export expenses to CSV or PDF
 
 👤 Author
